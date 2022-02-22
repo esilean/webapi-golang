@@ -20,7 +20,8 @@ func (app *application) getMovieById(w http.ResponseWriter, r *http.Request) {
 
 	movie, err := app.models.DB.GetById(id)
 	if err != nil {
-		app.logger.Println(err)
+		app.errorJSON(w, err)
+		return
 	}
 
 	app.writeJSON(w, http.StatusOK, movie, "movie")
@@ -32,7 +33,8 @@ func (app *application) getMovieById(w http.ResponseWriter, r *http.Request) {
 func (app *application) getMovies(w http.ResponseWriter, r *http.Request) {
 	movies, err := app.models.DB.GetAll()
 	if err != nil {
-		app.logger.Println(err)
+		app.errorJSON(w, err)
+		return
 	}
 
 	err = app.writeJSON(w, http.StatusOK, movies, "movies")
