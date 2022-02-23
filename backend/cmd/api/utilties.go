@@ -5,6 +5,15 @@ import (
 	"net/http"
 )
 
+func (app *application) writeNoContent(w http.ResponseWriter, status int) error {
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	w.Write(nil)
+
+	return nil
+}
+
 func (app *application) writeJSON(w http.ResponseWriter, status int, data interface{}, wrap string) error {
 	wrapper := make(map[string]interface{})
 
