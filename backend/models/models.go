@@ -1,8 +1,9 @@
 package models
 
 import (
-	"database/sql"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // Models is the wrapper for database
@@ -11,7 +12,7 @@ type Models struct {
 }
 
 // NewModels returns models with db pool
-func NewModels(db *sql.DB) Models {
+func NewModels(db *gorm.DB) Models {
 	return Models{
 		DB: DBModel{DB: db},
 	}
@@ -28,12 +29,12 @@ type Movie struct {
 	MPAARating  string         `json:"mpaa_rating"`
 	CreatedAt   time.Time      `json:"-"`
 	UpdatedAt   time.Time      `json:"-"`
-	MovieGenre  map[int]string `json:"genres"`
+	MovieGenre  map[int]string `json:"genres" gorm:"-"`
 }
 
 type Genre struct {
 	Id        int       `json:"id"`
-	Name      string    `json:"name"`
+	Name      string    `json:"name" gorm:"column:genre_name"`
 	CreatedAt time.Time `json:"-"`
 	UpdatedAt time.Time `json:"-"`
 }
@@ -45,4 +46,10 @@ type MovieGenre struct {
 	Genre     Genre     `json:"genre"`
 	CreatedAt time.Time `json:"-"`
 	UpdatedAt time.Time `json:"-"`
+}
+
+type User struct {
+	Id       int
+	Email    string
+	Password string
 }

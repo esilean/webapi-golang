@@ -3,7 +3,6 @@ package main
 import (
 	"backend/models"
 	"context"
-	"database/sql"
 	"flag"
 	"fmt"
 	"log"
@@ -11,7 +10,8 @@ import (
 	"os"
 	"time"
 
-	_ "github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 const version = "1.0.0"
@@ -21,6 +21,9 @@ type config struct {
 	env  string
 	db   struct {
 		dsn string
+	}
+	jwt struct {
+		secret string
 	}
 }
 
@@ -41,7 +44,8 @@ func main() {
 
 	flag.IntVar(&cfg.port, "port", 4000, "Server port to listening on")
 	flag.StringVar(&cfg.env, "env", "development", "Application environment (development|production")
-	flag.StringVar(&cfg.db.dsn, "dsn", "postgres://postgres:123456@@localhost/go_movies?sslmode=disable", "Postgres connection string")
+	flag.StringVar(&cfg.db.dsn, "dsn", "host=localhost user=postgres password=123456@ dbname=go_movies sslmode=disable", "Postgres connection string")
+	flag.StringVar(&cfg.jwt.secret, "jwt-secret", "2dce505d96a53c5768052ee90f3df2055657518dad489160df9913f66042e160", "Jwt secret")
 	flag.Parse()
 
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
@@ -50,7 +54,6 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
-	defer db.Close()
 
 	app := application{
 		config: cfg,
@@ -73,8 +76,9 @@ func main() {
 	}
 }
 
-func openDB(cfg config) (*sql.DB, error) {
-	db, err := sql.Open("postgres", cfg.db.dsn)
+func openDB(cfg config) (*gorm.DB, error) {
+
+	db, err := gorm.Open(postgres.Open(cfg.db.dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +86,12 @@ func openDB(cfg config) (*sql.DB, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err = db.PingContext(ctx)
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, err
+	}
+
+	err = sqlDB.PingContext(ctx)
 	if err != nil {
 		return nil, err
 	}

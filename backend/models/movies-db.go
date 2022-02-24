@@ -1,45 +1,20 @@
 package models
 
 import (
-	"context"
-	"database/sql"
-	"fmt"
-	"time"
+	"gorm.io/gorm"
 )
 
 type DBModel struct {
-	DB *sql.DB
+	DB *gorm.DB
 }
 
 func (m *DBModel) GetMovieById(id int) (*Movie, error) {
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	queryMovie := `select id, title, description, year, release_date, rating, runtime, mpaa_rating, created_at, updated_at
-			  from movies
-			  where id = $1
-			 `
-	row := m.DB.QueryRowContext(ctx, queryMovie, id)
-
 	var movie Movie
-	err := row.Scan(
-		&movie.Id,
-		&movie.Title,
-		&movie.Description,
-		&movie.Year,
-		&movie.ReleaseDate,
-		&movie.Rating,
-		&movie.Runtime,
-		&movie.MPAARating,
-		&movie.CreatedAt,
-		&movie.UpdatedAt,
-	)
-	if err != nil {
-		return nil, err
-	}
 
-	genres, err := m.getMovieGenres(id, ctx)
+	m.DB.First(&movie, id)
+
+	genres, err := m.getGenresByMovieId(id)
 	if err != nil {
 		return nil, err
 	}
@@ -50,87 +25,48 @@ func (m *DBModel) GetMovieById(id int) (*Movie, error) {
 }
 
 func (m *DBModel) GetAllMovies(genreIds ...int) ([]*Movie, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 
-	where := ""
+	var movies []*Movie
+
 	if len(genreIds) > 0 {
-		where = fmt.Sprintf("where id in (select movie_id from movies_genres where genre_id = %d)", genreIds[0])
+		subQuery := m.DB.Select("movie_id").Where("genre_id = ?", genreIds[0]).Table("movies_genres")
+		m.DB.Where("id in (?)", subQuery).Find(&movies)
+	} else {
+		m.DB.Find(&movies)
 	}
 
-	queryMovies := fmt.Sprintf(`select 
-								id, title, description, year, release_date, rating, runtime, 
-								mpaa_rating, created_at, updated_at 
-								from movies 
-								%s
-								order by title`, where)
+	for _, movie := range movies {
 
-	rows, err := m.DB.QueryContext(ctx, queryMovies)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	movies := make([]*Movie, 0)
-	for rows.Next() {
-
-		var movie Movie
-		err := rows.Scan(
-			&movie.Id,
-			&movie.Title,
-			&movie.Description,
-			&movie.Year,
-			&movie.ReleaseDate,
-			&movie.Rating,
-			&movie.Runtime,
-			&movie.MPAARating,
-			&movie.CreatedAt,
-			&movie.UpdatedAt,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		genres, err := m.getMovieGenres(movie.Id, ctx)
+		genres, err := m.getGenresByMovieId(movie.Id)
 		if err != nil {
 			return nil, err
 		}
 
 		movie.MovieGenre = genres
-
-		movies = append(movies, &movie)
 	}
 
 	return movies, nil
 }
 
-func (m *DBModel) getMovieGenres(id int, ctx context.Context) (map[int]string, error) {
+func (m *DBModel) getGenresByMovieId(movieId int) (map[int]string, error) {
 
-	queryGenres := `select 
-						a.id, a.movie_id, a.genre_id, b.genre_name name, a.created_at, a.updated_at
-					from movies_genres a
-					left join genres b on (a.genre_id = b.id)
-					where 
-						a.movie_id = $1
-					`
+	genres := make(map[int]string, 0)
+	rows, err := m.DB.Table("movies_genres a").
+		Select("a.genre_id id, b.genre_name name").
+		Joins("left join genres b on (a.genre_id = b.id)").
+		Where("a.movie_id = ?", movieId).
+		Rows()
 
-	rows, err := m.DB.QueryContext(ctx, queryGenres, id)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	genres := make(map[int]string, 0)
 	for rows.Next() {
 		var mg MovieGenre
 
 		err := rows.Scan(
 			&mg.Id,
-			&mg.MovieId,
-			&mg.GenreId,
 			&mg.Genre.Name,
-			&mg.CreatedAt,
-			&mg.UpdatedAt,
 		)
 
 		if err != nil {
@@ -144,119 +80,39 @@ func (m *DBModel) getMovieGenres(id int, ctx context.Context) (map[int]string, e
 }
 
 func (m *DBModel) GetAllGenres() ([]*Genre, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
 
-	queryGenres := `select a.id, a.genre_name name, a.created_at, a.updated_at
-					from genres a
-					order by a.genre_name
- 					`
+	var genres []*Genre
 
-	rows, err := m.DB.QueryContext(ctx, queryGenres)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	genres := make([]*Genre, 0)
-	for rows.Next() {
-
-		var genre Genre
-		err := rows.Scan(
-			&genre.Id,
-			&genre.Name,
-			&genre.CreatedAt,
-			&genre.UpdatedAt,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		genres = append(genres, &genre)
-	}
+	m.DB.Find(&genres)
 
 	return genres, nil
-
 }
 
 func (m *DBModel) AddMovie(movie Movie) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 
-	stmt := `insert into movies 
-			 (title, description, year, release_date, runtime, rating, mpaa_rating, created_at, updated_at)
-			 values 
-			 ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
-
-	_, err := m.DB.ExecContext(ctx, stmt,
-		movie.Title,
-		movie.Description,
-		movie.Year,
-		movie.ReleaseDate,
-		movie.Runtime,
-		movie.Rating,
-		movie.MPAARating,
-		movie.CreatedAt,
-		movie.UpdatedAt,
-	)
-	if err != nil {
-		return err
+	result := m.DB.Create(&movie)
+	if result.Error != nil {
+		return result.Error
 	}
 
 	return nil
 }
 
 func (m *DBModel) UpdateMovie(movie Movie) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 
-	stmt := `update movies
-			 set
-				title = $1,
-				description = $2,
-				year = $3,
-				release_date = $4,
-				runtime = $5,
-				rating = $6,
-				mpaa_rating = $7,
-				updated_at = $8
-			 where
-				id = $9
-			 `
-
-	_, err := m.DB.ExecContext(ctx, stmt,
-		movie.Title,
-		movie.Description,
-		movie.Year,
-		movie.ReleaseDate,
-		movie.Runtime,
-		movie.Rating,
-		movie.MPAARating,
-		movie.UpdatedAt,
-		movie.Id,
-	)
-	if err != nil {
-		return err
+	result := m.DB.Save(&movie)
+	if result.Error != nil {
+		return result.Error
 	}
 
 	return nil
 }
 
 func (m *DBModel) DeleteMovie(id int) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 
-	stmt := `delete from movies
-			 where
-				id = $1
-			 `
-
-	_, err := m.DB.ExecContext(ctx, stmt,
-		id,
-	)
-	if err != nil {
-		return err
+	result := m.DB.Delete(&Movie{}, id)
+	if result.Error != nil {
+		return result.Error
 	}
-
 	return nil
 }
