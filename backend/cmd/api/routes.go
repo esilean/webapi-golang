@@ -30,7 +30,6 @@ func (app *application) routes() http.Handler {
 
 	router.POST("/v1/admin/movie", app.wrap(secure.ThenFunc(app.upsertMovie)))
 	router.DELETE("/v1/admin/movie/:id", app.wrap(secure.ThenFunc(app.deleteMovie)))
-	//router.HandlerFunc(http.MethodDelete, "/v1/admin/movie/:id", app.deleteMovie)
 
 	router.HandlerFunc(http.MethodGet, "/v1/genres", app.getGenres)
 
