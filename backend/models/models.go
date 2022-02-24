@@ -33,8 +33,8 @@ type Movie struct {
 }
 
 type Genre struct {
-	Id        int       `json:"-"`
-	Name      string    `json:"name"`
+	Id        int       `json:"id"`
+	Name      string    `json:"name" gorm:"column:genre_name"`
 	CreatedAt time.Time `json:"-"`
 	UpdatedAt time.Time `json:"-"`
 }

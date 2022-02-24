@@ -1,13 +1,13 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { Link } from 'react-router-dom'
 
-const Admin = () => {
-    const [movies, setMovies] = useState([])
+const Genres = () => {
+    const [genres, setGenres] = useState([])
     const [isLoaded, setLoaded] = useState(false)
     const [error, setError] = useState('')
 
     useEffect(() => {
-        fetch('http://localhost:4000/v1/movies')
+        fetch('http://localhost:4000/v1/genres')
             .then((response) => {
 
                 if (response.status !== 200) {
@@ -19,7 +19,7 @@ const Admin = () => {
 
             })
             .then((json) => {
-                setMovies(json.movies)
+                setGenres(json.genres)
             })
             .catch(() => {
             })
@@ -34,15 +34,18 @@ const Admin = () => {
 
     return (
         <Fragment>
-            <h2>Choose a movie</h2>
+            <h2>Choose a Genre</h2>
 
             <div className='list-group'>
-                {movies.map((m) => (
-                    <Link key={m.id} to={`admin/movie/${m.id}`} className="list-group-item list-group-item-action">{m.title}</Link>
+                {genres.map((g) => (
+                    <Link key={g.id} to={{
+                        pathname: `/genre/${g.id}`,
+                        genrename: g.name
+                    }} className="list-group-item list-group-item-action">{g.name}</Link>
                 ))}
             </div>
         </Fragment>
     );
 }
 
-export default Admin;
+export default Genres
