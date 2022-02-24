@@ -1,12 +1,20 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { Link } from 'react-router-dom'
 
-const Admin = () => {
+const Admin = (props) => {
     const [movies, setMovies] = useState([])
     const [isLoaded, setLoaded] = useState(false)
     const [error, setError] = useState('')
 
     useEffect(() => {
+
+        if (props.token === '') {
+            props.history.push({
+                pathname: '/login'
+            })
+            return
+        }
+
         fetch('http://localhost:4000/v1/movies')
             .then((response) => {
 
@@ -27,7 +35,7 @@ const Admin = () => {
                 setLoaded(true)
             })
 
-    }, [])
+    }, [props.history, props.token])
 
     if (error) return (<p>Error: {error}</p>)
     if (!isLoaded) return (<p>Loading...</p>)

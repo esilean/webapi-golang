@@ -36,6 +36,13 @@ const EditMovie = (props) => {
 
     useEffect(() => {
 
+        if (props.token === '') {
+            props.history.push({
+                pathname: '/login'
+            })
+            return
+        }
+
         const id = props.match.params.id;
         if (id > 0) {
             fetch("http://localhost:4000/v1/movie/" + id)
@@ -69,7 +76,7 @@ const EditMovie = (props) => {
 
         setLoaded(true)
 
-    }, [props.match.params.id])
+    }, [props.history, props.match.params.id, props.token])
 
     function handleSubmit(evt) {
         evt.preventDefault()
@@ -87,10 +94,14 @@ const EditMovie = (props) => {
 
         const data = new FormData(evt.target)
         const payload = Object.fromEntries(data.entries())
+        const headers = new Headers()
+        headers.append("Content-Type", "application/json")
+        headers.append("Authorization", `bearer ${props.token}`)
 
         const requestOptions = {
             method: 'POST',
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            headers: headers
         }
 
         fetch('http://localhost:4000/v1/admin/movie', requestOptions)
@@ -139,7 +150,17 @@ const EditMovie = (props) => {
                 {
                     label: 'Yes',
                     onClick: () => {
-                        fetch(`http://localhost:4000/v1/admin/movie/${movie.id}`, { method: 'DELETE' })
+
+                        const headers = new Headers()
+                        headers.append("Content-Type", "application/json")
+                        headers.append("Authorization", `bearer ${props.token}`)
+
+                        const requestOptions = {
+                            method: 'DELETE',
+                            headers: headers
+                        }
+
+                        fetch(`http://localhost:4000/v1/admin/movie/${movie.id}`, requestOptions)
                             .then((response) => {
                                 if (response.status !== 204) {
                                     response.json().then((data) => {

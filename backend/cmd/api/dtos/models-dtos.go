@@ -33,3 +33,8 @@ func (r *MovieRequest) ToDomain() models.Movie {
 
 	return movie
 }
+
+type CredentialsRequest struct {
+	Username string `json:"email"`
+	Password string `json:"password"`
+}

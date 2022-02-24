@@ -44,6 +44,7 @@ func (app *application) getMovies(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) getMoviesByGenreId(w http.ResponseWriter, r *http.Request) {
+
 	params := httprouter.ParamsFromContext(r.Context())
 
 	id, err := strconv.Atoi(params.ByName("id"))
