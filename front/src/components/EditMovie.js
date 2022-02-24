@@ -1,4 +1,6 @@
 import React, { Fragment, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { confirmAlert } from 'react-confirm-alert'
 
 import Input from './form-components/Input'
 import TextArea from './form-components/TextArea'
@@ -7,6 +9,7 @@ import Select from './form-components/Select'
 import Alert from './ui-components/Alert'
 
 import './EditMovie.css'
+import 'react-confirm-alert/src/react-confirm-alert.css'
 
 const mpaaOptions = [
     { id: "G", value: "G" },
@@ -28,9 +31,8 @@ const EditMovie = (props) => {
             description: ''
         })
     const [isLoaded, setLoaded] = useState(false)
-    const [error, setError] = useState('')
     const [formErrors, setFormErrors] = useState([])
-    const [alert, setAlert] = useState({ type: 'd-none', message: '' })
+    const [alertMessage, setAlertMessage] = useState({ type: 'd-none', message: '' })
 
     useEffect(() => {
 
@@ -39,7 +41,6 @@ const EditMovie = (props) => {
             fetch("http://localhost:4000/v1/movie/" + id)
                 .then((response) => {
                     if (response.status !== 200) {
-                        setError("Invalid response code: " + response.status)
                         return;
                     }
 
@@ -59,7 +60,7 @@ const EditMovie = (props) => {
                     })
                 })
                 .catch((err) => {
-                    setAlert({
+                    setAlertMessage({
                         type: 'alert-danger',
                         message: err.message
                     })
@@ -92,14 +93,12 @@ const EditMovie = (props) => {
             body: JSON.stringify(payload)
         }
 
-        fetch('http://localhost:4000/v1/admin/editmovie', requestOptions)
+        fetch('http://localhost:4000/v1/admin/movie', requestOptions)
             .then(response => {
                 if (response.status !== 200) {
-                    setError("Invalid response code: " + response.status)
-
                     response.json().then((data) => {
 
-                        setAlert({
+                        setAlertMessage({
                             type: 'alert-danger',
                             message: data.error.message
                         })
@@ -108,13 +107,17 @@ const EditMovie = (props) => {
                     return
                 }
 
-                setAlert({
+                setAlertMessage({
                     type: 'alert-success',
                     message: 'Changes saved!'
                 })
+
+                props.history.push({
+                    pathname: '/admin'
+                })
             })
             .catch((err) => {
-                setAlert({
+                setAlertMessage({
                     type: 'alert-danger',
                     message: err.message
                 })
@@ -128,6 +131,49 @@ const EditMovie = (props) => {
         setMovie((prev) => ({ ...prev, [name]: value }))
     }
 
+    function confirmDelete() {
+        confirmAlert({
+            title: 'Delete movie',
+            message: 'Are you sure?',
+            buttons: [
+                {
+                    label: 'Yes',
+                    onClick: () => {
+                        fetch(`http://localhost:4000/v1/admin/movie/${movie.id}`, { method: 'DELETE' })
+                            .then((response) => {
+                                if (response.status !== 204) {
+                                    response.json().then((data) => {
+
+                                        setAlertMessage({
+                                            type: 'alert-danger',
+                                            message: data.error.message
+                                        })
+                                    })
+
+                                    return
+                                }
+
+                                props.history.push({
+                                    pathname: '/admin'
+                                })
+                            })
+                            .catch((err) => {
+                                setAlertMessage({
+                                    type: 'alert-danger',
+                                    message: err.message
+                                })
+                            })
+                    }
+                },
+                {
+                    label: 'No',
+                    onClick: () => { }
+                },
+            ]
+        })
+
+    }
+
     function hasError(key) {
         return formErrors.indexOf(key) !== -1
     }
@@ -138,8 +184,8 @@ const EditMovie = (props) => {
         <Fragment>
             <h2>Add/Edit Movie</h2>
             <Alert
-                alertType={alert.type}
-                alertMessage={alert.message}
+                alertType={alertMessage.type}
+                alertMessage={alertMessage.message}
             />
             <hr />
             <form onSubmit={handleSubmit}>
@@ -206,6 +252,14 @@ const EditMovie = (props) => {
                 <hr />
 
                 <button className='btn btn-primary'>Save</button>
+                <Link to='/admin' className='btn btn-warning ms-1'>
+                    Cancel
+                </Link>
+                {movie.id > 0 && (
+                    <a href='#!' onClick={() => confirmDelete()} className='btn btn-danger ms-1'>
+                        Delete
+                    </a>
+                )}
             </form>
         </Fragment>
     );
