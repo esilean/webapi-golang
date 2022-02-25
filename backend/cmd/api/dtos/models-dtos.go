@@ -15,6 +15,7 @@ type MovieRequest struct {
 	Runtime     string `json:"runtime"`
 	Rating      string `json:"rating"`
 	MPAARating  string `json:"mpaa_rating"`
+	Poster      string `json:"poster"`
 }
 
 func (r *MovieRequest) ToDomain() models.Movie {
@@ -28,6 +29,7 @@ func (r *MovieRequest) ToDomain() models.Movie {
 	movie.Runtime, _ = strconv.Atoi(r.Runtime)
 	movie.Rating, _ = strconv.Atoi(r.Rating)
 	movie.MPAARating = r.MPAARating
+	movie.Poster = r.Poster
 	movie.CreatedAt = time.Now()
 	movie.UpdatedAt = time.Now()
 

@@ -6,7 +6,9 @@ import Login from './components/Login';
 import Admin from './components/Admin';
 
 import Movies from './components/Movies';
+import MoviesGraphQL from './components/MoviesGraphQL';
 import OneMovie from './components/OneMovie';
+import OneMovieGraphQL from './components/OneMovieGraphQL';
 import EditMovie from './components/EditMovie';
 
 import Genres from './components/Genres'
@@ -81,6 +83,10 @@ export default function App() {
                     </>
                   )}
 
+                <li className="list-group-item">
+                  <Link to="/graphql">GraphQL</Link>
+                </li>
+
               </ul>
             </nav>
           </div>
@@ -94,6 +100,7 @@ export default function App() {
 
 
               <Route path="/movies/:id" component={OneMovie} />
+              <Route path="/moviesgraphql/:id" component={OneMovieGraphQL} />
 
               <Route path="/movies">
                 <Movies />
@@ -102,6 +109,10 @@ export default function App() {
               <Route path="/genre/:id" component={OneGenre} />
               <Route exact path="/genres">
                 <Genres />
+              </Route>
+
+              <Route exact path="/graphql">
+                <MoviesGraphQL />
               </Route>
 
               <Route path="/admin/movie/:id" component={((props) =>

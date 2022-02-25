@@ -25,6 +25,9 @@ type config struct {
 	jwt struct {
 		secret string
 	}
+	theMovieDB struct {
+		key string
+	}
 }
 
 type AppStatus struct {
@@ -46,6 +49,7 @@ func main() {
 	flag.StringVar(&cfg.env, "env", "development", "Application environment (development|production")
 	flag.StringVar(&cfg.db.dsn, "dsn", "host=localhost user=postgres password=123456@ dbname=go_movies sslmode=disable", "Postgres connection string")
 	flag.StringVar(&cfg.jwt.secret, "jwt-secret", "2dce505d96a53c5768052ee90f3df2055657518dad489160df9913f66042e160", "Jwt secret")
+	flag.StringVar(&cfg.theMovieDB.key, "the-movie-db-key", "dfefa4bf38b9ac8d4cf7288e39d274bc", "The Movie DB Key")
 	flag.Parse()
 
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
