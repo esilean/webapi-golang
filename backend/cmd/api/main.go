@@ -3,13 +3,14 @@ package main
 import (
 	"backend/models"
 	"context"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -42,15 +43,18 @@ type application struct {
 	models models.Models
 }
 
+func init() {
+	godotenv.Load()
+}
+
 func main() {
 	var cfg config
 
-	flag.IntVar(&cfg.port, "port", 4000, "Server port to listening on")
-	flag.StringVar(&cfg.env, "env", "development", "Application environment (development|production")
-	flag.StringVar(&cfg.db.dsn, "dsn", "host=localhost user=postgres password=123456@ dbname=go_movies sslmode=disable", "Postgres connection string")
-	flag.StringVar(&cfg.jwt.secret, "jwt-secret", "2dce505d96a53c5768052ee90f3df2055657518dad489160df9913f66042e160", "Jwt secret")
-	flag.StringVar(&cfg.theMovieDB.key, "the-movie-db-key", "dfefa4bf38b9ac8d4cf7288e39d274bc", "The Movie DB Key")
-	flag.Parse()
+	cfg.port, _ = strconv.Atoi(os.Getenv("GO_MOVIES_PORT"))
+	cfg.env = os.Getenv("GO_MOVIES_ENV")
+	cfg.db.dsn = os.Getenv("GO_MOVIES_POSTGRES_DSN")
+	cfg.jwt.secret = os.Getenv("GO_MOVIES_JWT_SECRET")
+	cfg.theMovieDB.key = os.Getenv("GO_MOVIES_THEMOVIEDB_KEY")
 
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
@@ -76,7 +80,7 @@ func main() {
 	logger.Println("Starting server on port", cfg.port)
 	err = srv.ListenAndServe()
 	if err != nil {
-		log.Println(err)
+		app.logger.Println(err)
 	}
 }
 

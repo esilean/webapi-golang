@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 
@@ -118,8 +117,6 @@ func (app *application) graphqlMovies(w http.ResponseWriter, r *http.Request) {
 
 	q, _ := io.ReadAll(r.Body)
 	query := string(q)
-
-	log.Println(query)
 
 	rootQuery := graphql.ObjectConfig{Name: "RootQuert", Fields: fields}
 	schemaConfig := graphql.SchemaConfig{Query: graphql.NewObject(rootQuery)}

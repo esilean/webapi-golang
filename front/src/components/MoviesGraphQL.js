@@ -32,7 +32,7 @@ const MoviesGraphQL = () => {
             headers: headers
         }
 
-        fetch("http://localhost:4000/v1/graphql", requestOptions)
+        fetch(`${process.env.REACT_APP_API_URL}/v1/graphql`, requestOptions)
             .then((response) => response.json())
             .then((data) => {
                 return Object.values(data.data.list)
@@ -88,7 +88,7 @@ const MoviesGraphQL = () => {
             headers: headers
         }
 
-        fetch("http://localhost:4000/v1/graphql", requestOptions)
+        fetch(`${process.env.REACT_APP_API_URL}/v1/graphql`, requestOptions)
             .then((response) => response.json())
             .then((data) => {
                 return Object.values(data.data.search)

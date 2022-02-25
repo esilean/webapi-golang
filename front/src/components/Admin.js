@@ -15,7 +15,7 @@ const Admin = (props) => {
             return
         }
 
-        fetch('http://localhost:4000/v1/movies')
+        fetch(`${process.env.REACT_APP_API_URL}/v1/movies`)
             .then((response) => {
 
                 if (response.status !== 200) {

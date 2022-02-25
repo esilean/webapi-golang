@@ -7,7 +7,7 @@ const Movies = () => {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetch('http://localhost:4000/v1/movies')
+    fetch(`${process.env.REACT_APP_API_URL}/v1/movies`)
       .then((response) => {
 
         if (response.status !== 200) {
@@ -21,7 +21,8 @@ const Movies = () => {
       .then((json) => {
         setMovies(json.movies)
       })
-      .catch(() => {
+      .catch((err) => {
+        setError(err.message)
       })
       .finally(() => {
         setLoaded(true)

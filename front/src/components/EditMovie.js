@@ -45,7 +45,7 @@ const EditMovie = (props) => {
 
         const id = props.match.params.id;
         if (id > 0) {
-            fetch("http://localhost:4000/v1/movie/" + id)
+            fetch(`${process.env.REACT_APP_API_URL}/v1/movie/${id}`)
                 .then((response) => {
                     if (response.status !== 200) {
                         return;
@@ -104,7 +104,7 @@ const EditMovie = (props) => {
             headers: headers
         }
 
-        fetch('http://localhost:4000/v1/admin/movie', requestOptions)
+        fetch(`${process.env.REACT_APP_API_URL}/v1/admin/movie`, requestOptions)
             .then(response => {
                 if (response.status !== 200) {
                     response.json().then((data) => {
@@ -160,7 +160,7 @@ const EditMovie = (props) => {
                             headers: headers
                         }
 
-                        fetch(`http://localhost:4000/v1/admin/movie/${movie.id}`, requestOptions)
+                        fetch(`${process.env.REACT_APP_API_URL}/v1/admin/movie/${movie.id}`, requestOptions)
                             .then((response) => {
                                 if (response.status !== 204) {
                                     response.json().then((data) => {
